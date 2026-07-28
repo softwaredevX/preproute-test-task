@@ -23,7 +23,6 @@ const PreviewPublish = () => {
 
   const durations = ['Always Available', '3 Weeks', '1 Week', '1 Month', '2 Weeks', 'Custom Duration'];
 
-  // Calendar & Date validation logic
   const now = new Date();
   const todayYear = now.getFullYear();
   const todayMonth = now.getMonth();
@@ -164,7 +163,6 @@ const PreviewPublish = () => {
         </div>
       </div>
 
-      {/* Test Summary Card */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8 shadow-sm relative">
         <button
           onClick={() => setIsEditModalOpen(true)}
@@ -229,7 +227,6 @@ const PreviewPublish = () => {
         </div>
       </div>
 
-      {/* Questions Preview */}
       {questions.length > 0 && (
         <div className="mb-8">
           <h3 className="text-[15px] font-bold text-gray-900 mb-4">Questions ({questions.length})</h3>
@@ -284,7 +281,6 @@ const PreviewPublish = () => {
         </div>
       )}
 
-      {/* Publish Options */}
       <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm mb-8 h-12 w-max">
         {['Publish Now', 'Schedule Publish'].map((type) => (
           <button
@@ -300,13 +296,11 @@ const PreviewPublish = () => {
         ))}
       </div>
 
-      {/* Schedule Publish Options */}
       {publishType === 'Schedule Publish' && (
         <div className="mb-8">
           <h3 className="text-[15px] font-bold text-gray-900 mb-4">Select Date and Time</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 max-w-3xl relative">
-            {/* Date Selector with Calendar Popover */}
             <div className="relative">
               <div
                 onClick={() => setIsScheduleCalendarOpen(!isScheduleCalendarOpen)}
@@ -318,7 +312,6 @@ const PreviewPublish = () => {
                 <Calendar size={18} className="text-gray-400" />
               </div>
 
-              {/* Calendar Popover */}
               {isScheduleCalendarOpen && (
                 <div className="absolute top-full left-0 mt-2 z-50 bg-white border border-gray-200 rounded-2xl shadow-xl p-4 w-[280px]">
                   <div className="flex items-center justify-between mb-3 px-1">
@@ -344,14 +337,12 @@ const PreviewPublish = () => {
                     </button>
                   </div>
 
-                  {/* Day Names */}
                   <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 mb-1">
                     {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
                       <div key={d}>{d}</div>
                     ))}
                   </div>
 
-                  {/* Calendar Days */}
                   <div className="grid grid-cols-7 gap-1 text-center text-xs">
                     {Array.from({ length: getFirstDayOfMonth(calYear, calMonth) }).map((_, i) => (
                       <div key={`empty-${i}`} />
@@ -393,7 +384,6 @@ const PreviewPublish = () => {
               )}
             </div>
 
-            {/* Time Selector */}
             <div className="relative">
               <select
                 value={scheduleTime}
@@ -438,7 +428,6 @@ const PreviewPublish = () => {
 
         {liveDuration === 'Custom Duration' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 max-w-3xl mb-8 relative">
-            {/* Date Selector with Calendar Popover */}
             <div className="relative">
               <div
                 onClick={() => setIsCalendarOpen(!isCalendarOpen)}
@@ -450,7 +439,6 @@ const PreviewPublish = () => {
                 <Calendar size={18} className="text-gray-400" />
               </div>
 
-              {/* Calendar Popover */}
               {isCalendarOpen && (
                 <div className="absolute top-full left-0 mt-2 z-50 bg-white border border-gray-200 rounded-2xl shadow-xl p-4 w-[280px]">
                   <div className="flex items-center justify-between mb-3 px-1">
@@ -476,14 +464,12 @@ const PreviewPublish = () => {
                     </button>
                   </div>
 
-                  {/* Day Names */}
                   <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 mb-1">
                     {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
                       <div key={d}>{d}</div>
                     ))}
                   </div>
 
-                  {/* Calendar Days */}
                   <div className="grid grid-cols-7 gap-1 text-center text-xs">
                     {Array.from({ length: getFirstDayOfMonth(calYear, calMonth) }).map((_, i) => (
                       <div key={`empty-${i}`} />
@@ -521,7 +507,6 @@ const PreviewPublish = () => {
               )}
             </div>
 
-            {/* Time Selector */}
             <div className="relative">
               <select
                 value={endTime}

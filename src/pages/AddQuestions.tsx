@@ -50,6 +50,8 @@ const AddQuestions = () => {
   const [saveError, setSaveError] = useState("");
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
+  const isMaxQuestionsReached = !editingQuestionId && !!details?.total_questions && localQuestions.length >= details.total_questions;
+
   const {
     register,
     control,
@@ -74,7 +76,6 @@ const AddQuestions = () => {
   const { fields, remove, append } = useFieldArray({ control, name: "options" });
   const correctOptionIndex = watch("correctOptionIndex");
 
-  // Add or update question to local list & testStore, then reset form
   const onSubmitQuestion = handleSubmit((data) => {
     if (data.correctOptionIndex < 0) {
       return;
@@ -168,7 +169,6 @@ const AddQuestions = () => {
     return "medium";
   };
 
-  // Bulk save all questions then navigate
   const handleSaveAndContinue = async () => {
     if (localQuestions.length === 0) {
       setSaveError("Please add at least 1 question before continuing.");
@@ -230,7 +230,6 @@ const AddQuestions = () => {
 
   return (
     <div className="p-10 pb-16 max-w-[1100px] font-sans min-h-full flex flex-col relative">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="text-[13px] text-gray-500 font-semibold flex items-center gap-1.5">
           Test Creation <span className="text-gray-300">/</span> Create Test{" "}
@@ -246,7 +245,6 @@ const AddQuestions = () => {
         </button>
       </div>
 
-      {/* Test Summary Card */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8 shadow-sm relative">
         <button
           onClick={() => setIsEditModalOpen(true)}
@@ -319,9 +317,25 @@ const AddQuestions = () => {
         </div>
       </div>
 
-      {/* Question Form */}
       <div className="mb-6 flex-1">
-        <div className="flex justify-between items-center mb-6">
+        {isMaxQuestionsReached ? (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-8 text-center shadow-sm">
+            <CheckCircle2 size={40} className="text-green-500 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">All Questions Added</h3>
+            <p className="text-[13px] font-medium text-gray-600 mb-6">
+              You have added all {details.total_questions} questions for this test. You can review them below or proceed.
+            </p>
+            <button
+              onClick={handleSaveAndContinue}
+              disabled={isSaving}
+              className="px-8 py-3 text-sm font-bold text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 shadow-sm"
+            >
+              {isSaving ? "Saving..." : "Save & Continue"}
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-gray-900">
             {editingQuestionId ? "Edit Question" : `Question ${localQuestions.length + 1}`}
             {!editingQuestionId && (
@@ -340,7 +354,6 @@ const AddQuestions = () => {
         </div>
 
         <form onSubmit={onSubmitQuestion} className="space-y-8">
-          {/* Question Text */}
           <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
             <div className="flex items-center gap-1 border-b border-gray-200 px-4 py-2.5 text-gray-400">
               <button type="button" className="p-1.5 hover:bg-gray-100 rounded text-gray-600"><Bold size={16} /></button>
@@ -366,7 +379,6 @@ const AddQuestions = () => {
           </div>
           {errors.text && <p className="-mt-6 text-xs text-red-500">{errors.text.message}</p>}
 
-          {/* Options */}
           <div>
             <h4 className="text-[13px] font-bold text-gray-800 mb-4">
               Options <span className="text-gray-400 font-normal text-xs">(click the circle to mark correct answer)</span>
@@ -412,7 +424,6 @@ const AddQuestions = () => {
             </div>
           </div>
 
-          {/* Solution */}
           <div>
             <h4 className="text-[13px] font-bold text-gray-800 mb-4">Add Solution <span className="text-gray-400 font-normal">(optional)</span></h4>
             <textarea
@@ -423,7 +434,6 @@ const AddQuestions = () => {
             />
           </div>
 
-          {/* Settings */}
           <div className="pt-2">
             <h4 className="text-[13px] font-bold text-gray-800 mb-6">Question settings <span className="text-gray-400 font-normal">(optional)</span></h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -508,6 +518,8 @@ const AddQuestions = () => {
             </div>
           </div>
         </form>
+          </>
+        )}
       </div>
 
       {localQuestions.length > 0 && (

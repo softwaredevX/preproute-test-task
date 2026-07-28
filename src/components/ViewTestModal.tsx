@@ -30,7 +30,6 @@ const ViewTestModal: React.FC<ViewTestModalProps> = ({ isOpen, onClose, testId, 
           const data = res.data.data;
           setTestData(data);
 
-          // Fetch questions if question_ids exist or returned in data
           if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
             if (typeof data.questions[0] === 'string') {
               const qRes = await fetchBulkQuestions(data.questions);
@@ -68,7 +67,6 @@ const ViewTestModal: React.FC<ViewTestModalProps> = ({ isOpen, onClose, testId, 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto font-sans relative flex flex-col">
-        {/* Modal Header */}
         <div className="flex justify-between items-center px-8 py-6 border-b border-gray-100 sticky top-0 bg-white z-10">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-bold text-gray-800">Test Details</h2>
@@ -102,7 +100,6 @@ const ViewTestModal: React.FC<ViewTestModalProps> = ({ isOpen, onClose, testId, 
           </div>
         </div>
 
-        {/* Content Body */}
         <div className="p-8 space-y-8 flex-1">
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-3">
@@ -115,7 +112,6 @@ const ViewTestModal: React.FC<ViewTestModalProps> = ({ isOpen, onClose, testId, 
             </div>
           ) : (
             <>
-              {/* Test Name & Type */}
               <div className="bg-[#F8FAFC] border border-gray-100 rounded-2xl p-6 relative">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="px-4 py-1 bg-[#0A1646] text-white text-[11px] font-bold rounded-full capitalize">
@@ -165,7 +161,6 @@ const ViewTestModal: React.FC<ViewTestModalProps> = ({ isOpen, onClose, testId, 
                     </div>
                   </div>
 
-                  {/* Summary Metrics */}
                   <div className="flex flex-col justify-center gap-3 bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
                     <div className="flex justify-between items-center border-b border-gray-100 pb-2.5">
                       <span className="flex items-center gap-2 text-gray-500 font-medium">
@@ -189,7 +184,6 @@ const ViewTestModal: React.FC<ViewTestModalProps> = ({ isOpen, onClose, testId, 
                 </div>
               </div>
 
-              {/* Marking Scheme */}
               <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Marking Scheme</h4>
                 <div className="grid grid-cols-3 gap-4 text-center">
@@ -208,7 +202,6 @@ const ViewTestModal: React.FC<ViewTestModalProps> = ({ isOpen, onClose, testId, 
                 </div>
               </div>
 
-              {/* Questions List */}
               <div>
                 <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center justify-between">
                   <span>Test Questions ({questions.length})</span>
@@ -279,7 +272,6 @@ const ViewTestModal: React.FC<ViewTestModalProps> = ({ isOpen, onClose, testId, 
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-8 py-5 border-t border-gray-100 flex justify-end bg-gray-50 rounded-b-2xl">
           <button
             onClick={onClose}

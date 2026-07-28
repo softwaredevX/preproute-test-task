@@ -29,7 +29,6 @@ const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'live'>('all');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Modal states
   const [viewingTestId, setViewingTestId] = useState<string | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingTest, setEditingTest] = useState<any>(null);
@@ -114,7 +113,6 @@ const Dashboard = () => {
 
   return (
     <div className="p-8 space-y-6 bg-[#F6F8FC] min-h-[calc(100vh-88px)] font-sans">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Your Tests</h1>
@@ -133,7 +131,6 @@ const Dashboard = () => {
         </Link>
       </div>
 
-      {/* Search + Filter bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -162,7 +159,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white shadow-sm border border-gray-100 overflow-hidden rounded-xl">
         {loading ? (
           <div className="px-6 py-16 flex flex-col items-center justify-center gap-3">
@@ -272,7 +268,6 @@ const Dashboard = () => {
               </table>
             </div>
 
-            {/* Pagination footer */}
             <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white">
               <p className="text-sm text-gray-500">
                 Showing{' '}
@@ -331,7 +326,6 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* View Test Modal */}
       <ViewTestModal
         isOpen={isViewModalOpen}
         onClose={() => {
@@ -345,7 +339,6 @@ const Dashboard = () => {
         }}
       />
 
-      {/* Edit Test Modal */}
       <EditTestModal
         isOpen={isEditModalOpen}
         onClose={() => {

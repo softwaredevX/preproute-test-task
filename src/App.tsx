@@ -19,7 +19,6 @@ const App = () => {
           <Route path="/preview-publish" element={<PreviewPublish />} />
         </Route>
         
-        {/* Redirect root to dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

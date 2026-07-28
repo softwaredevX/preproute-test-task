@@ -41,23 +41,21 @@ const Login = () => {
         setUser(response.data.data.user);
         navigate(from, { replace: true });
       } else {
-        logout(); // clear any stale token so the auth guard doesn't pass
+        logout();
         setError('root', { message: response.data.message || 'Invalid username or password' });
       }
     } catch (error: any) {
-      logout(); // clear any stale token so the auth guard doesn't pass
+      logout();
       setError('root', { message: error.response?.data?.message || 'Invalid username or password' });
     }
   };
 
   return (
     <div className="flex min-h-screen bg-[#F7F9FC]">
-      {/* Left side illustration */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-[#F7F9FC]">
         <img src={loginIllustration} alt="Login Illustration" className="w-[80%] max-w-[600px] object-contain" />
       </div>
 
-      {/* Right side form */}
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-32 bg-[#F7F9FC]">
         <div className="mx-auto w-full max-w-[500px] bg-white p-12 rounded-xl border border-blue-100 shadow-sm h-[600px] flex flex-col justify-center relative">
           

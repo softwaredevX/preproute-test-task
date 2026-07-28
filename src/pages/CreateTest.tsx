@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -62,7 +62,6 @@ const CreateTest = () => {
   const correctAnswer = watch("correctAnswer");
   const noOfQuestions = watch("noOfQuestions");
 
-  // Auto-calculate total marks
   useEffect(() => {
     const q = parseInt(noOfQuestions || "0");
     const c = Number(correctAnswer) || 0;
@@ -71,7 +70,6 @@ const CreateTest = () => {
     }
   }, [noOfQuestions, correctAnswer, setValue]);
 
-  // Fetch subjects on mount
   useEffect(() => {
     getSubjects()
       .then((res) => {
@@ -80,7 +78,6 @@ const CreateTest = () => {
       .catch(console.error);
   }, []);
 
-  // Fetch topics when subject changes
   useEffect(() => {
     if (selectedSubject) {
       setSelectedTopicIds([]);
@@ -99,7 +96,6 @@ const CreateTest = () => {
     }
   }, [selectedSubject]);
 
-  // Fetch sub-topics when selected topics change
   useEffect(() => {
     if (selectedTopicIds.length > 0) {
       setSelectedSubTopicIds([]);
@@ -219,59 +215,89 @@ const CreateTest = () => {
     </div>
   );
 
-  const CheckboxList = ({
+  const MultiSelectDropdown = ({
     items,
     selected,
     onToggle,
     error,
     emptyMsg,
+    placeholder = "Choose from Drop-down"
   }: {
     items: any[];
     selected: string[];
     onToggle: (id: string) => void;
     error: string;
     emptyMsg: string;
-  }) => (
-    <>
-      {items.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 px-4 py-3.5 text-gray-400 text-sm bg-gray-50">
-          {emptyMsg}
-        </div>
-      ) : (
+    placeholder?: string;
+  }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+          setIsOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const selectedText = selected.length === 0
+      ? placeholder
+      : selected.length === 1
+        ? items.find((i: any) => i.id === selected[0])?.name || placeholder
+        : `${selected.length} selected`;
+
+    return (
+      <div className="relative" ref={dropdownRef}>
         <div
-          className={"rounded-lg border " + (error ? "border-red-400" : "border-gray-300") + " p-3 bg-white max-h-[160px] overflow-y-auto space-y-1"}
+          onClick={() => setIsOpen(!isOpen)}
+          className={
+            "w-full cursor-pointer rounded-lg border flex items-center justify-between " +
+            (error ? "border-red-400" : "border-gray-300") +
+            " px-4 py-3.5 text-gray-700 bg-white sm:text-sm transition-colors"
+          }
         >
-          {items.map((item) => (
-            <label
-              key={item.id}
-              onClick={() => onToggle(item.id)}
-              className="flex items-center gap-3 cursor-pointer py-1.5 hover:bg-gray-50 px-1 rounded select-none"
-            >
-              <div
-                className={
-                  "w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors " +
-                  (selected.includes(item.id)
-                    ? "bg-blue-600 border-blue-600"
-                    : "border-gray-300 bg-white")
-                }
-              >
-                {selected.includes(item.id) && (
-                  <Check size={10} className="text-white" strokeWidth={3} />
-                )}
-              </div>
-              <span className="text-[13px] text-gray-700 font-medium">{item.name}</span>
-            </label>
-          ))}
+          <span className={selected.length === 0 ? "text-gray-400" : "text-gray-900 font-medium truncate pr-4"}>
+            {selectedText}
+          </span>
+          <ChevronDown size={18} className={"text-gray-500 transition-transform flex-shrink-0 " + (isOpen ? "rotate-180" : "")} />
         </div>
-      )}
-      {selected.length > 0 && (
-        <p className="mt-1 text-xs text-blue-600 font-medium">
-          {selected.length} selected
-        </p>
-      )}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-    </>
-  );
+
+        {isOpen && (
+          <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-60 overflow-y-auto py-1">
+            {items.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-gray-400">{emptyMsg}</div>
+            ) : (
+              items.map((item) => (
+                <label
+                  key={item.id}
+                  onClick={(e) => { e.preventDefault(); onToggle(item.id); }}
+                  className="flex items-center gap-3 cursor-pointer py-2.5 px-4 hover:bg-gray-50 select-none"
+                >
+                  <div
+                    className={
+                      "w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors " +
+                      (selected.includes(item.id)
+                        ? "bg-blue-600 border-blue-600"
+                        : "border-gray-300 bg-white")
+                    }
+                  >
+                    {selected.includes(item.id) && (
+                      <Check size={10} className="text-white" strokeWidth={3} />
+                    )}
+                  </div>
+                  <span className="text-[13px] text-gray-700 font-medium">{item.name}</span>
+                </label>
+              ))
+            )}
+          </div>
+        )}
+        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      </div>
+    );
+  };
 
   return (
     <div className="p-8 max-w-[1000px] font-sans h-full">
@@ -291,7 +317,7 @@ const CreateTest = () => {
               className={
                 "px-8 py-2 text-[14px] font-bold rounded-lg transition-colors capitalize " +
                 (testType === type
-                  ? "bg-blue-600 text-white shadow"
+                  ? "bg-[#F4F6FF] text-blue-600"
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-50")
               }
             >
@@ -302,7 +328,6 @@ const CreateTest = () => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-7">
-            {/* Subject */}
             <div>
               <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Subject</label>
               <div className="relative">
@@ -328,7 +353,6 @@ const CreateTest = () => {
               )}
             </div>
 
-            {/* Test Name */}
             <div>
               <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Name of Test</label>
               <input
@@ -346,7 +370,6 @@ const CreateTest = () => {
               )}
             </div>
 
-            {/* Topics */}
             <div>
               <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Topics</label>
               {!selectedSubject ? (
@@ -354,17 +377,17 @@ const CreateTest = () => {
                   Select a subject first
                 </div>
               ) : (
-                <CheckboxList
+                <MultiSelectDropdown
                   items={topicsList}
                   selected={selectedTopicIds}
                   onToggle={toggleTopic}
                   error={topicError}
                   emptyMsg="Loading topics..."
+                  placeholder="Choose from Drop-down"
                 />
               )}
             </div>
 
-            {/* Sub-topics */}
             <div>
               <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Sub Topics</label>
               {selectedTopicIds.length === 0 ? (
@@ -372,17 +395,17 @@ const CreateTest = () => {
                   Select topics first
                 </div>
               ) : (
-                <CheckboxList
+                <MultiSelectDropdown
                   items={subTopicsList}
                   selected={selectedSubTopicIds}
                   onToggle={toggleSubTopic}
                   error={subTopicError}
                   emptyMsg="Loading sub-topics..."
+                  placeholder="Choose from Drop-down"
                 />
               )}
             </div>
 
-            {/* Duration */}
             <div>
               <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Duration (Minutes)</label>
               <input
@@ -400,7 +423,6 @@ const CreateTest = () => {
               )}
             </div>
 
-            {/* Difficulty */}
             <div>
               <label className="block text-[13px] font-bold text-gray-700 mb-4">Test Difficulty Level</label>
               <div className="flex items-center gap-10 mt-3.5">
@@ -429,7 +451,6 @@ const CreateTest = () => {
             </div>
           </div>
 
-          {/* Marking Scheme */}
           <div className="pt-2">
             <label className="block text-[13px] font-bold text-gray-700 mb-4">Marking Scheme:</label>
             <div className="flex flex-wrap items-end gap-10">

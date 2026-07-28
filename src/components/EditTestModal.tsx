@@ -39,7 +39,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
   const [topicsList, setTopicsList] = useState<any[]>([]);
   const [subTopicsList, setSubTopicsList] = useState<any[]>([]);
 
-  // Multi-select state – pre-fill from existing activeData
   const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>(activeData?.topics || []);
   const [selectedSubTopicIds, setSelectedSubTopicIds] = useState<string[]>(activeData?.sub_topics || []);
   const [topicError, setTopicError] = useState('');
@@ -71,7 +70,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
     },
   });
 
-  // Re-sync form state when modal opens or testData changes
   useEffect(() => {
     if (!isOpen) return;
     const target = testData || details;
@@ -101,14 +99,12 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
   const correctAnswer = watch('correctAnswer');
   const noOfQuestions = watch('noOfQuestions');
 
-  // Auto-calculate total marks
   useEffect(() => {
     const q = parseInt(noOfQuestions || '0');
     const c = Number(correctAnswer) || 0;
     if (q > 0 && c > 0) setValue('totalMarks', String(q * c));
   }, [noOfQuestions, correctAnswer, setValue]);
 
-  // Fetch subjects once on open & auto-select matching subject
   useEffect(() => {
     if (!isOpen) return;
     const target = testData || details;
@@ -130,7 +126,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
       .catch(console.error);
   }, [isOpen, testData, details, setValue]);
 
-  // Fetch topics when subject changes & auto-select matching topics
   useEffect(() => {
     if (!selectedSubject) return;
     const target = testData || details;
@@ -154,7 +149,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
       .catch(console.error);
   }, [selectedSubject, testData, details]);
 
-  // Fetch sub-topics when selected topics change & auto-select matching sub-topics
   useEffect(() => {
     if (selectedTopicIds.length === 0) {
       setSubTopicsList([]);
@@ -327,7 +321,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
         </div>
 
         <div className="p-8">
-          {/* Test Type Toggle */}
           <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm mb-10 h-12">
             {['chapterwise', 'pyq', 'mock test'].map((type) => (
               <button
@@ -345,7 +338,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-7">
-              {/* Subject — fetched from API */}
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Subject</label>
                 <div className="relative">
@@ -365,7 +357,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
                 {errors.subject && <p className="mt-1 text-xs text-red-500">{errors.subject.message}</p>}
               </div>
 
-              {/* Test Name — pre-filled from details */}
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Name of Test</label>
                 <input
@@ -377,7 +368,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
                 {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
               </div>
 
-              {/* Topics — cascaded from selected subject */}
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Topics</label>
                 {!selectedSubject ? (
@@ -393,7 +383,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
                 )}
               </div>
 
-              {/* Sub-topics — cascaded from selected topics */}
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Sub Topics</label>
                 {selectedTopicIds.length === 0 ? (
@@ -409,7 +398,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
                 )}
               </div>
 
-              {/* Duration — pre-filled from details */}
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Duration (Minutes)</label>
                 <input
@@ -421,7 +409,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
                 {errors.duration && <p className="mt-1 text-xs text-red-500">{errors.duration.message}</p>}
               </div>
 
-              {/* Test Status */}
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-2.5">Test Status</label>
                 <div className="relative">
@@ -442,7 +429,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
                 {errors.status && <p className="mt-1 text-xs text-red-500">{errors.status.message}</p>}
               </div>
 
-              {/* Difficulty — pre-filled from details */}
               <div className="md:col-span-2">
                 <label className="block text-[13px] font-bold text-gray-700 mb-4">Test Difficulty Level</label>
                 <div className="flex items-center gap-10 mt-3.5">
@@ -459,7 +445,6 @@ const EditTestModal: React.FC<EditTestModalProps> = ({ isOpen, onClose, testData
               </div>
             </div>
 
-            {/* Marking Scheme — pre-filled from details */}
             <div className="pt-2">
               <label className="block text-[13px] font-bold text-gray-700 mb-4">Marking Scheme:</label>
               <div className="flex flex-wrap items-end gap-10">

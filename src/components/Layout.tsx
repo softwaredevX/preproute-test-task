@@ -26,10 +26,8 @@ const Layout = () => {
     navigate('/login', { replace: true });
   };
 
-  // Hide standard sidebar for test creation steps except the first one
   const isQuestionCreation = location.pathname.includes('/add-questions') || location.pathname.includes('/preview-publish');
 
-  // Custom Logo Component for reusability
   const Logo = ({ size = "24" }: { size?: string }) => (
     <img 
       src={logo} 
@@ -40,7 +38,6 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-[#F6F8FC] font-sans">
-      {/* Sidebar */}
       {!isQuestionCreation ? (
         <aside className="w-64 bg-white border-r border-gray-100 flex flex-col shrink-0 py-6">
           <div className="px-8 mb-8 flex items-center">
@@ -147,14 +144,11 @@ const Layout = () => {
             </div>
           </div>
           
-          {/* Subtle line pointing from sidebar content towards main form (visible in image 3) */}
           <div className="absolute top-[350px] right-0 w-8 h-px bg-gray-200"></div>
         </aside>
       )}
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden bg-white">
-        {/* Top Navbar */}
         <header className="h-[88px] border-b border-gray-100 flex items-center justify-end px-10 shrink-0 bg-white shadow-sm z-20">
           <div className="flex items-center gap-6">
             <button className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 relative">
@@ -177,7 +171,6 @@ const Layout = () => {
                 </div>
               </div>
 
-              {/* Dropdown Menu */}
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-2xl shadow-xl py-1.5 z-50">
                   <div className="px-4 py-2.5 border-b border-gray-100">
@@ -198,7 +191,6 @@ const Layout = () => {
           </div>
         </header>
         
-        {/* Page Content */}
         <div className="flex-1 overflow-auto bg-white">
           <Outlet />
         </div>
