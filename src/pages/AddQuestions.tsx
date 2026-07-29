@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +24,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import EditTestModal from "../components/EditTestModal";
-import { bulkCreateQuestions } from "../services/api";
+import { bulkCreateQuestions, updateTest } from "../services/api";
 
 const questionSchema = z.object({
   text: z.string().min(1, "Question text is required"),
@@ -43,7 +43,7 @@ type QuestionForm = z.infer<typeof questionSchema>;
 
 const AddQuestions = () => {
   const navigate = useNavigate();
-  const { details, questions: storeQuestions, setQuestions } = useTestStore();
+  const { details, questions: storeQuestions, setQuestions, setDetails } = useTestStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [localQuestions, setLocalQuestions] = useState<any[]>(storeQuestions || []);
   const [isSaving, setIsSaving] = useState(false);
@@ -75,6 +75,136 @@ const AddQuestions = () => {
 
   const { fields, remove, append } = useFieldArray({ control, name: "options" });
   const correctOptionIndex = watch("correctOptionIndex");
+  const textValue = watch("text");
+  
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if ((!storeQuestions || storeQuestions.length === 0) && localQuestions.length === 0) {
+      const seedQ = {
+        id: Math.random().toString(36).substr(2, 9),
+        text: "What is shown in the image below?<br/><br/><img src=\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgZmlsbD0iYmx1ZSIgLz48L3N2Zz4=\" />",
+        options: ["A blue square", "A red circle", "A green triangle", "A yellow star"],
+        correctOptionIndex: 0,
+        solution: "It is a simple blue square SVG.",
+        difficulty: "easy",
+        topic: "",
+        subTopic: ""
+      };
+      setLocalQuestions([seedQ]);
+      setQuestions([seedQ]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== textValue) {
+      editorRef.current.innerHTML = textValue || '';
+    }
+  }, [textValue, editingQuestionId]);
+
+  const handleFormat = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    if (editorRef.current) {
+      setValue("text", editorRef.current.innerHTML, { shouldValidate: true });
+    }
+  };
+
+  const handleImageUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (readerEvent) => {
+          handleFormat('insertImage', readerEvent.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
+  const handleCSVUpload = (e: any) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const parseCSVLine = (line: string) => {
+        const result = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          if (line[i] === '"') inQuotes = !inQuotes;
+          else if (line[i] === ',' && !inQuotes) {
+            result.push(cur.trim());
+            cur = '';
+          } else cur += line[i];
+        }
+        result.push(cur.trim());
+        return result;
+      };
+
+      const lines = text.split('\n').filter(l => l.trim().length > 0);
+      if (lines.length <= 1) return; 
+
+      const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+      const parsedQuestions = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const row = parseCSVLine(lines[i]);
+        const q: any = {};
+        headers.forEach((h, idx) => {
+          q[h] = row[idx] || '';
+        });
+
+        if (!q.text && !q.question) continue;
+
+        const options = [];
+        if (q.option1) options.push(q.option1);
+        if (q.option2) options.push(q.option2);
+        if (q.option3) options.push(q.option3);
+        if (q.option4) options.push(q.option4);
+
+        if (options.length < 2) continue; 
+
+        let correctIdx = 0;
+        const correctStr = String(q.correctoption || q.correct_option || q.correct || '').toLowerCase();
+        if (correctStr.includes('1') || correctStr === 'a') correctIdx = 0;
+        else if (correctStr.includes('2') || correctStr === 'b') correctIdx = 1;
+        else if (correctStr.includes('3') || correctStr === 'c') correctIdx = 2;
+        else if (correctStr.includes('4') || correctStr === 'd') correctIdx = 3;
+
+        parsedQuestions.push({
+          id: Math.random().toString(36).substr(2, 9),
+          text: q.text || q.question,
+          options,
+          correctOptionIndex: correctIdx,
+          solution: q.solution || q.explanation || "",
+          difficulty: q.difficulty || "medium",
+          topic: q.topic || "",
+          subTopic: q.subtopic || "",
+        });
+      }
+
+      if (parsedQuestions.length > 0) {
+        const newLocal = [...localQuestions, ...parsedQuestions];
+        setLocalQuestions(newLocal);
+        setQuestions(newLocal);
+        if (details) {
+          setDetails({
+            ...details,
+            total_questions: Math.max(details.total_questions || 0, newLocal.length),
+          });
+        }
+      }
+      e.target.value = ''; 
+    };
+    reader.readAsText(file);
+  };
 
   const onSubmitQuestion = handleSubmit((data) => {
     if (data.correctOptionIndex < 0) {
@@ -114,6 +244,12 @@ const AddQuestions = () => {
       const updated = [...localQuestions, newQ];
       setLocalQuestions(updated);
       setQuestions(updated);
+      if (details) {
+        setDetails({
+          ...details,
+          total_questions: Math.max(details.total_questions || 0, updated.length),
+        });
+      }
     }
 
     reset({
@@ -182,6 +318,7 @@ const AddQuestions = () => {
     try {
       setIsSaving(true);
       setSaveError("");
+
       const payload = {
         questions: localQuestions.map((q) => {
           const qObj: any = {
@@ -197,13 +334,19 @@ const AddQuestions = () => {
             subject: details?.subject || "",
             test_id: testId,
           };
-          if (q.topic) qObj.topic = q.topic;
-          if (q.subTopic) qObj.sub_topic = q.subTopic;
           return qObj;
         }),
       };
       const res = await bulkCreateQuestions(payload);
       if (res.data.status === "success") {
+        if (testId) {
+          const totalQ = localQuestions.length;
+          const correctMarks = Number(details?.correct_marks) || 5;
+          await updateTest(testId, {
+            total_questions: totalQ,
+            total_marks: totalQ * correctMarks,
+          }).catch(console.error);
+        }
         setQuestions(localQuestions);
         navigate("/preview-publish");
       } else {
@@ -236,13 +379,19 @@ const AddQuestions = () => {
           <span className="text-gray-300">/</span>{" "}
           <span className="text-gray-800 capitalize">{details?.type || "Chapter Wise"}</span>
         </div>
-        <button
-          onClick={handleSaveAndContinue}
-          disabled={isSaving}
-          className="px-10 py-3 text-sm font-bold text-white bg-[#6582FF] rounded-lg shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-50"
-        >
-          {isSaving ? "Saving..." : "Save & Preview"}
-        </button>
+        <div className="flex gap-4">
+          <label className="cursor-pointer px-6 py-3 text-sm font-bold text-[#6582FF] bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors shadow-sm">
+            Upload CSV
+            <input type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
+          </label>
+          <button
+            onClick={handleSaveAndContinue}
+            disabled={isSaving}
+            className="px-10 py-3 text-sm font-bold text-white bg-[#6582FF] rounded-lg shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-50"
+          >
+            {isSaving ? "Saving..." : "Save & Preview"}
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8 shadow-sm relative">
@@ -356,25 +505,31 @@ const AddQuestions = () => {
         <form onSubmit={onSubmitQuestion} className="space-y-8">
           <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
             <div className="flex items-center gap-1 border-b border-gray-200 px-4 py-2.5 text-gray-400">
-              <button type="button" className="p-1.5 hover:bg-gray-100 rounded text-gray-600"><Bold size={16} /></button>
-              <button type="button" className="p-1.5 hover:bg-gray-100 rounded"><Italic size={16} /></button>
-              <button type="button" className="p-1.5 hover:bg-gray-100 rounded"><Underline size={16} /></button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); handleFormat('bold'); }} className="p-1.5 hover:bg-gray-100 rounded text-gray-600"><Bold size={16} /></button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); handleFormat('italic'); }} className="p-1.5 hover:bg-gray-100 rounded"><Italic size={16} /></button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); handleFormat('underline'); }} className="p-1.5 hover:bg-gray-100 rounded"><Underline size={16} /></button>
               <div className="w-px h-5 bg-gray-200 mx-2" />
-              <button type="button" className="p-1.5 hover:bg-gray-100 rounded"><Link2 size={16} /></button>
-              <button type="button" className="p-1.5 hover:bg-gray-100 rounded"><AlignLeft size={16} /></button>
-              <button type="button" className="p-1.5 hover:bg-gray-100 rounded"><AlignCenter size={16} /></button>
-              <button type="button" className="p-1.5 hover:bg-gray-100 rounded"><AlignRight size={16} /></button>
-              <button type="button" className="p-1.5 hover:bg-gray-100 rounded"><List size={16} /></button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); const url = prompt('Enter URL'); if (url) handleFormat('createLink', url); }} className="p-1.5 hover:bg-gray-100 rounded"><Link2 size={16} /></button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); handleFormat('justifyLeft'); }} className="p-1.5 hover:bg-gray-100 rounded"><AlignLeft size={16} /></button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); handleFormat('justifyCenter'); }} className="p-1.5 hover:bg-gray-100 rounded"><AlignCenter size={16} /></button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); handleFormat('justifyRight'); }} className="p-1.5 hover:bg-gray-100 rounded"><AlignRight size={16} /></button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); handleFormat('insertUnorderedList'); }} className="p-1.5 hover:bg-gray-100 rounded"><List size={16} /></button>
               <div className="w-px h-5 bg-gray-200 mx-2" />
-              <button type="button" className="p-1.5 hover:bg-gray-100 rounded"><ImageIcon size={16} /></button>
+              <button type="button" onClick={handleImageUpload} className="p-1.5 hover:bg-gray-100 rounded"><ImageIcon size={16} /></button>
             </div>
             <div className="relative">
-              <textarea
-                {...register("text")}
-                rows={5}
-                className="w-full p-5 focus:outline-none resize-y text-[13px] font-medium text-gray-700 placeholder-gray-400 min-h-[120px]"
-                placeholder="Type the question here..."
+              <div
+                ref={editorRef}
+                contentEditable
+                onInput={(e) => setValue("text", e.currentTarget.innerHTML, { shouldValidate: true })}
+                className="w-full p-5 focus:outline-none resize-y text-[13px] font-medium text-gray-700 min-h-[120px] max-h-[300px] overflow-y-auto"
+                style={{ minHeight: "120px" }}
               />
+              {!textValue && (
+                <div className="absolute top-5 left-5 pointer-events-none text-gray-400 text-[13px] font-medium">
+                  Type the question here...
+                </div>
+              )}
             </div>
           </div>
           {errors.text && <p className="-mt-6 text-xs text-red-500">{errors.text.message}</p>}
@@ -537,7 +692,10 @@ const AddQuestions = () => {
                   {idx + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-gray-800 mb-2">{q.text}</p>
+                  <div 
+                    className="text-[13px] font-semibold text-gray-800 mb-2"
+                    dangerouslySetInnerHTML={{ __html: q.text }}
+                  />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-gray-500 mb-2">
                     {q.options.map((opt: string, oi: number) => (
                       <div

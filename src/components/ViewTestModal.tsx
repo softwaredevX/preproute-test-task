@@ -172,13 +172,19 @@ const ViewTestModal: React.FC<ViewTestModalProps> = ({ isOpen, onClose, testId, 
                       <span className="flex items-center gap-2 text-gray-500 font-medium">
                         <FileText size={16} className="text-blue-500" /> Total Questions
                       </span>
-                      <span className="font-bold text-gray-900">{testData.total_questions ?? '—'} Questions</span>
+                      <span className="font-bold text-gray-900">
+                        {questions.length > 0 ? questions.length : (testData.total_questions ?? '—')} Questions
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="flex items-center gap-2 text-gray-500 font-medium">
                         <Award size={16} className="text-blue-500" /> Total Marks
                       </span>
-                      <span className="font-bold text-gray-900">{testData.total_marks ?? '—'} Marks</span>
+                      <span className="font-bold text-gray-900">
+                        {questions.length > 0
+                          ? questions.length * (testData.correct_marks ?? 5)
+                          : (testData.total_marks ?? '—')} Marks
+                      </span>
                     </div>
                   </div>
                 </div>

@@ -89,12 +89,12 @@ const Layout = () => {
             </Link>
             
             <p className="text-sm font-medium text-gray-500 mb-6">
-              Total Questions · {details?.total_questions || '?'}
+              Total Questions · {Math.max(details?.total_questions || 0, questions.length)}
             </p>
             
             <div className="space-y-3 pr-2 max-h-[calc(100vh-280px)] overflow-y-auto">
               {Array.from({
-                length: details?.total_questions || Math.max(questions.length, 5),
+                length: Math.max(details?.total_questions || 0, questions.length),
               }).map((_, idx) => {
                 const qNum = idx + 1;
                 const isCompleted = idx < questions.length;
