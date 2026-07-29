@@ -1,0 +1,9 @@
+text,option1,option2,option3,option4,correctOption,solution,difficulty,topic,subTopic
+"What is the area of a circle with radius 7 cm?","132 sq cm","154 sq cm","144 sq cm","176 sq cm",2,"Area of a circle = π × r² = 3.14 × 7 × 7 = 154 sq cm.",Easy,Geometry,Circles
+"What is the circumference of a circle with diameter 14 cm?","44 cm","66 cm","88 cm","22 cm",1,"Circumference = π × d = 3.14 × 14 = 44 cm.",Easy,Geometry,Circles
+"How many degrees are in the sum of interior angles of a triangle?","90","180","270","360",2,"The sum of all interior angles of a triangle is always 180 degrees.",Easy,Geometry,Triangles
+"What type of triangle has all three sides equal?","Scalene","Isosceles","Equilateral","Right-angled",3,"An equilateral triangle has all three sides and all three angles equal (60° each).",Easy,Geometry,Triangles
+"What is the derivative of x²?","x","2x","x³","2",2,"Using the power rule, d/dx(x²) = 2x.",Medium,Calculus,
+"What is the integral of 2x dx?","x²","2x² + C","x² + C","2 + C",3,"The integral of 2x is x² + C, where C is the constant of integration.",Medium,Calculus,
+"What is the solution of x + 5 = 12?","5","6","7","8",3,"x + 5 = 12, so x = 12 - 5 = 7.",Easy,Algebra,
+"If 2x - 3 = 11, what is x?","5","6","7","8",3,"2x = 11 + 3 = 14, so x = 7.",Easy,Algebra,
