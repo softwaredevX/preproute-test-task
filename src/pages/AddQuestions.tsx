@@ -79,22 +79,6 @@ const AddQuestions = () => {
   
   const editorRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if ((!storeQuestions || storeQuestions.length === 0) && localQuestions.length === 0) {
-      const seedQ = {
-        id: Math.random().toString(36).substr(2, 9),
-        text: "What is shown in the image below?<br/><br/><img src=\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgZmlsbD0iYmx1ZSIgLz48L3N2Zz4=\" />",
-        options: ["A blue square", "A red circle", "A green triangle", "A yellow star"],
-        correctOptionIndex: 0,
-        solution: "It is a simple blue square SVG.",
-        difficulty: "easy",
-        topic: "",
-        subTopic: ""
-      };
-      setLocalQuestions([seedQ]);
-      setQuestions([seedQ]);
-    }
-  }, []);
 
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== textValue) {
@@ -109,7 +93,34 @@ const AddQuestions = () => {
     }
   };
 
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const saveSelection = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      savedRangeRef.current = selection.getRangeAt(0).cloneRange();
+    }
+  };
+
+  const restoreSelection = () => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+      const selection = window.getSelection();
+      if (selection && savedRangeRef.current) {
+        selection.removeAllRanges();
+        selection.addRange(savedRangeRef.current);
+      } else {
+        const range = document.createRange();
+        range.selectNodeContents(editorRef.current);
+        range.collapse(false);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      }
+    }
+  };
+
   const handleImageUpload = () => {
+    saveSelection();
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -118,7 +129,21 @@ const AddQuestions = () => {
       if (file) {
         const reader = new FileReader();
         reader.onload = (readerEvent) => {
-          handleFormat('insertImage', readerEvent.target?.result as string);
+          const dataUrl = readerEvent.target?.result as string;
+          restoreSelection();
+          const success = document.execCommand('insertImage', false, dataUrl);
+          if (!success && editorRef.current) {
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '300px';
+            img.style.borderRadius = '8px';
+            img.style.margin = '8px 0';
+            editorRef.current.appendChild(img);
+          }
+          if (editorRef.current) {
+            setValue("text", editorRef.current.innerHTML, { shouldValidate: true });
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -515,7 +540,7 @@ const AddQuestions = () => {
               <button type="button" onMouseDown={(e) => { e.preventDefault(); handleFormat('justifyRight'); }} className="p-1.5 hover:bg-gray-100 rounded"><AlignRight size={16} /></button>
               <button type="button" onMouseDown={(e) => { e.preventDefault(); handleFormat('insertUnorderedList'); }} className="p-1.5 hover:bg-gray-100 rounded"><List size={16} /></button>
               <div className="w-px h-5 bg-gray-200 mx-2" />
-              <button type="button" onClick={handleImageUpload} className="p-1.5 hover:bg-gray-100 rounded"><ImageIcon size={16} /></button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); handleImageUpload(); }} className="p-1.5 hover:bg-gray-100 rounded"><ImageIcon size={16} /></button>
             </div>
             <div className="relative">
               <div
@@ -693,7 +718,7 @@ const AddQuestions = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div 
-                    className="text-[13px] font-semibold text-gray-800 mb-2"
+                    className="text-[13px] font-semibold text-gray-800 mb-2 [&_img]:max-w-full [&_img]:max-h-[300px] [&_img]:rounded-lg [&_img]:my-2"
                     dangerouslySetInnerHTML={{ __html: q.text }}
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-gray-500 mb-2">

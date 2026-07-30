@@ -5,6 +5,16 @@ import { Edit2, Clock, FileText, Award, Calendar, ChevronDown, CheckCircle2, Che
 import EditTestModal from '../components/EditTestModal';
 import { publishTest } from '../services/api';
 
+const getPlainText = (html?: string) => {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const text = doc.body.textContent || doc.body.innerText || '';
+  if (!text.trim() && html.includes('<img')) {
+    return '[Image Question]';
+  }
+  return text.trim();
+};
+
 const PreviewPublish = () => {
   const navigate = useNavigate();
   const { details, questions, clearTest } = useTestStore();
@@ -179,7 +189,7 @@ const PreviewPublish = () => {
 
         <div className="flex items-center gap-4 mb-6">
           <h3 className="text-[17px] font-bold text-gray-900 flex items-center gap-2">
-            <span className="text-xl">📚</span> {details?.name || '—'}
+            <span className="text-xl">📚</span> {details?.name || 'Test Name'}
           </h3>
           <span className={`px-3 py-1 ${diffColor} text-white text-[11px] font-bold rounded-full flex items-center gap-1`}>
             <div className="w-1.5 h-1.5 rounded-full bg-white opacity-60" />
@@ -231,52 +241,61 @@ const PreviewPublish = () => {
         <div className="mb-8">
           <h3 className="text-[15px] font-bold text-gray-900 mb-4">Questions ({questions.length})</h3>
           <div className="space-y-3">
-            {questions.map((q, idx) => (
-              <div key={q.id} className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setExpandedQuestion(expandedQuestion === idx ? null : idx)}
-                  className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
-                    {idx + 1}
-                  </div>
-                  <p className="flex-1 text-[13px] text-gray-800 font-medium truncate">{q.text}</p>
-                  <ChevronRight
-                    size={16}
-                    className={`text-gray-400 transition-transform ${expandedQuestion === idx ? 'rotate-90' : ''}`}
-                  />
-                </button>
-                {expandedQuestion === idx && (
-                  <div className="px-5 pb-5 border-t border-gray-50">
-                    <div className="space-y-2 mt-4">
-                      {q.options.map((opt, oi) => (
-                        <div
-                          key={oi}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-[13px] font-medium ${
-                            oi === q.correctOptionIndex
-                              ? 'border-green-300 bg-green-50 text-green-700'
-                              : 'border-gray-200 text-gray-600'
-                          }`}
-                        >
-                          <span className="font-bold">{String.fromCharCode(65 + oi)}.</span>
-                          {opt}
-                          {oi === q.correctOptionIndex && (
-                            <CheckCircle2 size={14} className="ml-auto text-green-500" />
-                          )}
-                        </div>
-                      ))}
+            {questions.map((q, idx) => {
+              const plainTitle = getPlainText(q.text || (q as any).question);
+              return (
+                <div key={q.id || idx} className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedQuestion(expandedQuestion === idx ? null : idx)}
+                    className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                      {idx + 1}
                     </div>
-                    {q.solution && (
-                      <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
-                        <p className="text-xs font-bold text-blue-700 mb-1">Explanation</p>
-                        <p className="text-[13px] text-blue-800">{q.solution}</p>
+                    <p className="flex-1 text-[13px] text-gray-800 font-medium truncate">
+                      {plainTitle || `Question ${idx + 1}`}
+                    </p>
+                    <ChevronRight
+                      size={16}
+                      className={`text-gray-400 transition-transform ${expandedQuestion === idx ? 'rotate-90' : ''}`}
+                    />
+                  </button>
+                  {expandedQuestion === idx && (
+                    <div className="px-5 pb-5 border-t border-gray-50">
+                      <div 
+                        className="text-[13px] text-gray-800 font-medium mt-4 [&_img]:max-w-full [&_img]:max-h-[300px] [&_img]:rounded-lg [&_img]:my-2"
+                        dangerouslySetInnerHTML={{ __html: q.text || (q as any).question }}
+                      />
+                      <div className="space-y-2 mt-4">
+                        {q.options.map((opt, oi) => (
+                          <div
+                            key={oi}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-[13px] font-medium ${
+                              oi === q.correctOptionIndex
+                                ? 'border-green-300 bg-green-50 text-green-700 font-bold'
+                                : 'border-gray-200 text-gray-600'
+                            }`}
+                          >
+                            <span className="font-bold">{String.fromCharCode(65 + oi)}.</span>
+                            {opt}
+                            {oi === q.correctOptionIndex && (
+                              <CheckCircle2 size={14} className="ml-auto text-green-500" />
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                      {q.solution && (
+                        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
+                          <p className="text-xs font-bold text-blue-700 mb-1">Explanation</p>
+                          <p className="text-[13px] text-blue-800">{q.solution}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

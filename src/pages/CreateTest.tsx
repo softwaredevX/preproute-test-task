@@ -35,6 +35,17 @@ const CreateTest = () => {
   const [subTopicError, setSubTopicError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const extractErrorMessage = (error: any) => {
+    if (error.response?.data?.errors && Array.isArray(error.response.data.errors) && error.response.data.errors.length > 0) {
+      return error.response.data.errors.map((e: any) => e.msg).join(". ");
+    }
+    if (error.response?.data?.message) {
+      return error.response.data.message;
+    }
+    return "Failed to save test. Please try again.";
+  };
 
   const {
     register,
@@ -167,15 +178,19 @@ const CreateTest = () => {
     if (!validateSelections()) return;
     try {
       setIsSavingDraft(true);
+      setApiError("");
       const payload = buildPayload(data, "draft");
       const res = await createTest(payload);
-      if (res.data.status === "success") {
+      if (res.data.status === "success" || res.data.success) {
         setTestId(res.data.data.id);
         setDetails(payload as any);
         navigate("/dashboard");
+      } else {
+        setApiError(res.data.message || "Failed to save draft");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save draft:", error);
+      setApiError(extractErrorMessage(error));
     } finally {
       setIsSavingDraft(false);
     }
@@ -185,15 +200,19 @@ const CreateTest = () => {
     if (!validateSelections()) return;
     try {
       setIsSubmitting(true);
+      setApiError("");
       const payload = buildPayload(data, "draft");
       const res = await createTest(payload);
-      if (res.data.status === "success") {
+      if (res.data.status === "success" || res.data.success) {
         setTestId(res.data.data.id);
         setDetails(payload as any);
         navigate("/add-questions");
+      } else {
+        setApiError(res.data.message || "Failed to create test");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create test:", error);
+      setApiError(extractErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -325,6 +344,13 @@ const CreateTest = () => {
             </button>
           ))}
         </div>
+
+        {apiError && (
+          <div className="mb-8 bg-red-50 text-red-600 font-semibold p-4 rounded-xl border border-red-200 text-xs flex items-center justify-between shadow-sm">
+            <span>{apiError}</span>
+            <button type="button" onClick={() => setApiError("")} className="text-red-400 hover:text-red-600 font-bold ml-4 text-base">×</button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-7">
